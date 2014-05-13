@@ -57,7 +57,6 @@
     Item *item=[[SLDataStore defaultStore] itemAtIndexPath:indexPath];
     if(item.product||item.board) {
         NSPredicate *predicate=[NSPredicate predicateWithFormat:@"primary=YES"];
-        NSString *imageUrl;
         Image *itemImage=nil;
         if(item.product) {
             cell.textLabel.text=item.product.name;
@@ -66,41 +65,49 @@
             cell.textLabel.text=[NSString stringWithFormat:@"%@ by %@",item.board.title,item.board.creator.username];
             itemImage=item.board.coverImage;
         }
-        if(itemImage)
-            imageUrl=itemImage.url;
-        UIImage *image=[_imageCache objectForKey:imageUrl];
-        if(!image&&itemImage&&itemImage.image)
-            image=itemImage.image;
-        if(image) {
-            cell.imageView.image=image;
-            if(cell.activityIndicator) {
-                [cell.activityIndicator stopAnimating];
-                cell.activityIndicator.hidden=YES;
+        if(itemImage) {
+            //try to get the image from cache
+            UIImage *image=[_imageCache objectForKey:itemImage.url];
+            if(!image&&itemImage&&itemImage.image) {
+                //get image from Core Data if it wasn't cached
+                image=itemImage.image;
             }
-        }else {
-            [cell.activityIndicator startAnimating];
-            cell.activityIndicator.hidden=NO;
-            cell.imageView.image=nil;
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-                NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:imageUrl]];
-                if(data) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+            if(image) {
+                //display the image if there was any within cache or Ciore Data
+                cell.imageView.image=image;
+                if(cell.activityIndicator) {
+                    [cell.activityIndicator stopAnimating];
+                    cell.activityIndicator.hidden=YES;
+                }
+            }else {
+                //otherwise load image from url
+                [cell.activityIndicator startAnimating];
+                cell.activityIndicator.hidden=NO;
+                cell.imageView.image=nil;
+                
+                //dispatch loading the image from url into background queue
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+                    NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
+                    if(data) {
                         UIImage *image=[UIImage imageWithData:data];
                         if(image) {
                             if(itemImage) {
                                 itemImage.image=image;
                             }
-                            cell.imageView.image=image;
-                            [_imageCache setObject:image forKey:imageUrl];
+                            [_imageCache setObject:image forKey:itemImage.url];
+                            //dispatch UI updates to main queue
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+                                cell.imageView.image=image;
+                                if(cell.activityIndicator) {
+                                    [cell.activityIndicator stopAnimating];
+                                    cell.activityIndicator.hidden=YES;
+                                }
+                            });
                         }
-                        if(cell.activityIndicator) {
-                            [cell.activityIndicator stopAnimating];
-                            cell.activityIndicator.hidden=YES;
-                        }
-                    });
-                }
-            });
+                    }
+                });
+            }
         }
     }
     return cell;

@@ -103,6 +103,7 @@ static SLDataGrabber *_instance;
                             board.comments=[boardDict objectForKey:@"comments"];
                             NSString *coverImageURL=[boardDict objectForKey:@"coverImage"];
                             if(coverImageURL&&[coverImageURL isKindOfClass:[NSString class]]&&coverImageURL.length>0) {
+                                //prepend http: because the API data lacks this and starts with //
                                 coverImageURL=[@"http:" stringByAppendingString:coverImageURL];
                                 Image *coverImage=[[SLDataStore defaultStore] getImageByURL:coverImageURL];
                                 if(!coverImage) {
