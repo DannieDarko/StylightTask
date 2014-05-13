@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import "SLDataGrabberDelegate.h"
 
-@interface SLItemCollectionViewController : UICollectionViewController<UICollectionViewDataSource,UICollectionViewDelegate,SLDataGrabberDelegate>
+@interface SLItemCollectionViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate,SLDataGrabberDelegate>
+@property (strong, nonatomic) IBOutlet UICollectionView *collectionView;
+@property (strong, nonatomic) IBOutlet UIView *topBarView;
 
 @end

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65437CA81922CD84006E63DC /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65437CA71922CD84006E63DC /* QuartzCore.framework */; };
 		65CFD91D190A30820034154A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD91C190A30820034154A /* Foundation.framework */; };
 		65CFD91F190A30820034154A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD91E190A30820034154A /* CoreGraphics.framework */; };
 		65CFD921190A30820034154A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD920190A30820034154A /* UIKit.framework */; };
@@ -49,6 +50,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		65437CA71922CD84006E63DC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		65CFD919190A30820034154A /* StylightTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StylightTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65CFD91C190A30820034154A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		65CFD91E190A30820034154A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -104,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65437CA81922CD84006E63DC /* QuartzCore.framework in Frameworks */,
 				65CFD91F190A30820034154A /* CoreGraphics.framework in Frameworks */,
 				65CFD921190A30820034154A /* UIKit.framework in Frameworks */,
 				65CFD91D190A30820034154A /* Foundation.framework in Frameworks */,
@@ -145,6 +148,7 @@
 		65CFD91B190A30820034154A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				65437CA71922CD84006E63DC /* QuartzCore.framework */,
 				65CFD91C190A30820034154A /* Foundation.framework */,
 				65CFD91E190A30820034154A /* CoreGraphics.framework */,
 				65CFD920190A30820034154A /* UIKit.framework */,

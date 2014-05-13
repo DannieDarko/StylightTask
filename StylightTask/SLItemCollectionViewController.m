@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 STYLIGHT GMBH. All rights reserved.
 //
 
+#import <QuartzCore/QuartzCore.h>
+
 #import "SLItemCollectionViewController.h"
 #import "SLItemCollectionViewCell.h"
 #import "SLDataGrabber.h"
@@ -29,6 +31,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    self.topBarView.layer.shadowColor=[UIColor blackColor].CGColor;
+    self.topBarView.layer.shadowOffset=CGSizeMake(0.0f, 0.0f);
+    self.topBarView.layer.shadowRadius=5.0f;
+    self.topBarView.layer.shadowOpacity=0.3f;
     _imageCache=[[NSCache alloc] init];
     _maxRow=0;
     _page=0;

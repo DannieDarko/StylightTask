@@ -206,6 +206,8 @@ static SLDataGrabber *_instance;
                                     if(!gender) {
                                         gender=[[SLDataStore defaultStore] createGender];
                                         gender.genid=genderGenid;
+                                    }else {
+                                        NSLog(@"Found gender");
                                     }
                                     gender.genname=[genderDict objectForKey:@"genname"];
                                     product.gender=gender;

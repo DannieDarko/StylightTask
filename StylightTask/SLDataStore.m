@@ -103,7 +103,7 @@ static SLDataStore *_instance;
 {
     NSManagedObject *managedObject=nil;
     NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:entityName];
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%@=%@",field,value];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K == %@",field,value];
     [fetchRequest setPredicate:predicate];
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:field ascending:NO];
     [fetchRequest setSortDescriptors:@[sortDescriptor]];
