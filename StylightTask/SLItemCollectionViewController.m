@@ -22,6 +22,7 @@
     NSCache *_imageCache;
     NSUInteger _maxRow;
     NSUInteger _page;
+    CGRect _imageFrame;
 }
 
 @end
@@ -40,6 +41,65 @@
     _page=0;
     [SLDataGrabber defaultDataGrabber].delegate=self;
 }
+
+-(void)hideImage:(UITapGestureRecognizer *)tapGestureRecognizer
+{
+    UIView *largeImageView=tapGestureRecognizer.view;
+    UIView *backgroundView=[largeImageView viewWithTag:1];
+    UIView *imageView=[largeImageView viewWithTag:2];
+    [UIView animateWithDuration:0.3f animations:^{
+        imageView.frame=_imageFrame;
+        backgroundView.alpha=0.0f;
+    } completion:^(BOOL finished) {
+        [largeImageView removeFromSuperview];
+        self.collectionView.userInteractionEnabled=YES;
+    }];
+}
+
+#pragma mark UICollectionViewDelegate
+
+-(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    Item *item=[[SLDataStore defaultStore] itemAtIndexPath:indexPath];
+    SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+    NSPredicate *predicate=[NSPredicate predicateWithFormat:@"primary=YES"];
+    Image *image=item.product?[item.product.images filteredSetUsingPredicate:predicate].anyObject:item.board.coverImage;
+    if(image&&image.image) {
+        self.collectionView.userInteractionEnabled=NO;
+        UIView *largeImageView=[[UIView alloc] initWithFrame:self.collectionView.frame];
+        largeImageView.backgroundColor=[UIColor clearColor];
+        
+        UIView *backgroundView=[[UIView alloc] initWithFrame:largeImageView.bounds];
+        backgroundView.backgroundColor=[UIColor blackColor];
+        backgroundView.alpha=0.0f;
+        backgroundView.tag=1;
+        [largeImageView addSubview:backgroundView];
+        
+        UIImageView *imageView=[[UIImageView alloc] initWithImage:image.image];
+        imageView.contentMode=UIViewContentModeScaleAspectFit;
+        imageView.frame=CGRectMake(cell.frame.origin.x+cell.imageView.frame.origin.x,
+                                   cell.frame.origin.y+cell.imageView.frame.origin.y-self.collectionView.contentOffset.y,
+                                   cell.imageView.frame.size.width,
+                                   cell.imageView.frame.size.height);
+        _imageFrame=imageView.frame;
+        imageView.tag=2;
+        [largeImageView addSubview:imageView];
+        
+        [self.view addSubview:largeImageView];
+        [self.view bringSubviewToFront:self.topBarView];
+        
+        [UIView animateWithDuration:0.3f animations:^{
+            backgroundView.alpha=0.3f;
+            imageView.frame=largeImageView.bounds;
+        } completion:^(BOOL finished) {
+            UITapGestureRecognizer *gestureRecognizer=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideImage:)];
+            [largeImageView addGestureRecognizer:gestureRecognizer];
+            imageView.userInteractionEnabled=YES;
+        }];
+    }
+}
+
+#pragma mark UICollectionViewDataSource
 
 -(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
@@ -79,7 +139,7 @@
                 image=itemImage.image;
             }
             if(image) {
-                //display the image if there was any within cache or Ciore Data
+                //display the image if there was any within cache or Core Data
                 cell.imageView.image=image;
                 if(cell.activityIndicator) {
                     [cell.activityIndicator stopAnimating];
