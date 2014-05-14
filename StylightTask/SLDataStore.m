@@ -205,8 +205,8 @@ static SLDataStore *_instance;
 
 -(void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {
-    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(didReceiveChanges)]) {
-        [self.delegate didReceiveChanges];
+    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(didReceiveChangesAtIndexPath:)]) {
+        [self.delegate didReceiveChangesAtIndexPath:indexPath];
     }
 }
 

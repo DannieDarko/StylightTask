@@ -10,5 +10,5 @@
 
 @protocol SLDataStoreDelegate <NSObject>
 @optional -(void)didUpdateResults;
-@optional -(void)didReceiveChanges;
+@optional -(void)didReceiveChangesAtIndexPath:(NSIndexPath *)indexPath;
 @end

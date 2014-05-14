@@ -157,21 +157,21 @@
                     NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
                     if(data) {
                         UIImage *image=[UIImage imageWithData:data];
-                        if(image) {
-                            if(itemImage) {
-                                itemImage.image=image;
-                            }
-                            [_imageCache setObject:image forKey:itemImage.url];
-                            //dispatch UI updates to main queue
-                            dispatch_async(dispatch_get_main_queue(), ^{
+                        //dispatch UI updates to main queue
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            if(image) {
+                                if(itemImage) {
+                                    itemImage.image=image;
+                                }
+                                [_imageCache setObject:image forKey:itemImage.url];
                                 SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
                                 cell.imageView.image=image;
                                 if(cell.activityIndicator) {
                                     [cell.activityIndicator stopAnimating];
                                     cell.activityIndicator.hidden=YES;
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 });
             }
@@ -186,12 +186,10 @@
 {
     [[SLDataStore defaultStore] update];
     [self.collectionView reloadData];
-    NSLog(@"Did as told");
 }
 
--(void)didReceiveChanges
+-(void)didReceiveChangesAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSLog(@"There are changes");
 }
 
 #pragma mark SLDataGrabberDelegate
