@@ -10,6 +10,7 @@
 #import <CoreData/NSFetchedResultsController.h>
 
 @class Item, Product, Brand, Gender, Shop, Image, Currency, Board, Creator;
+@protocol SLDataStoreDelegate;
 
 @interface SLDataStore : NSObject<NSFetchedResultsControllerDelegate>
 +(SLDataStore *)defaultStore;
@@ -35,4 +36,5 @@
 -(Item *)itemAtIndexPath:(NSIndexPath *)indexPath;
 -(void)update;
 -(void)save;
+@property (nonatomic, strong) id<SLDataStoreDelegate>delegate;
 @end

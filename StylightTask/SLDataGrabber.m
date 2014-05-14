@@ -233,8 +233,7 @@ static SLDataGrabber *_instance;
                 }
             }
         }
-        [[SLDataStore defaultStore] update];
-        [[SLDataStore defaultStore] save];
+//        [[SLDataStore defaultStore] update];
         if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataGrabberDelegate)]&&[self.delegate respondsToSelector:@selector(didFinishGrabbingData)]) {
             [self.delegate didFinishGrabbingData];
         }

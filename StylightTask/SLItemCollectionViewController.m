@@ -40,6 +40,7 @@
     _maxRow=0;
     _page=0;
     [SLDataGrabber defaultDataGrabber].delegate=self;
+    [SLDataStore defaultStore].delegate=self;
 }
 
 -(void)hideImage:(UITapGestureRecognizer *)tapGestureRecognizer
@@ -177,6 +178,20 @@
         }
     }
     return cell;
+}
+
+#pragma mark SLDataStoreDelegate
+
+-(void)didUpdateResults
+{
+    [[SLDataStore defaultStore] update];
+    [self.collectionView reloadData];
+    NSLog(@"Did as told");
+}
+
+-(void)didReceiveChanges
+{
+    NSLog(@"There are changes");
 }
 
 #pragma mark SLDataGrabberDelegate
