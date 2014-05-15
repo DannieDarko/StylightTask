@@ -10,7 +10,7 @@
 #import "SLDataGrabberDelegate.h"
 #import "SLDataStoreDelegate.h"
 
-@interface SLItemCollectionViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate,SLDataGrabberDelegate,SLDataStoreDelegate>
+@interface SLItemCollectionViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate,SLDataGrabberDelegate,SLDataStoreDelegate, UIScrollViewDelegate>
 @property (strong, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (strong, nonatomic) IBOutlet UIView *topBarView;
 

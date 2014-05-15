@@ -59,7 +59,7 @@ static SLDataGrabber *_instance;
 {
     if(!_session) {
         NSURLSessionConfiguration *config=[NSURLSessionConfiguration ephemeralSessionConfiguration];
-        _session=[NSURLSession sessionWithConfiguration:config delegate:nil delegateQueue:[NSOperationQueue mainQueue]];
+        _session=[NSURLSession sessionWithConfiguration:config delegate:nil delegateQueue:[[NSOperationQueue alloc] init]];
     }
     NSString *endpointURL=[kSLAPIURL stringByAppendingFormat:@"?gender=women&page=%li&pageItems=20&initializeRows=100",(long)page];
     NSMutableURLRequest *request=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:endpointURL] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:kSLTIMEOUT];
@@ -80,162 +80,169 @@ static SLDataGrabber *_instance;
             if(!jsonObj||![jsonObj isKindOfClass:[NSDictionary class]]||[[jsonObj objectForKey:@"build"] integerValue]!=1||![[jsonObj objectForKey:@"status"] isEqualToString:kSUCCESS])
                 return;
             
-            for(NSDictionary *itemDict in [jsonObj objectForKey:@"items"]) {
-                NSNumber *itemId=[itemDict objectForKey:@"id"];
-                if(itemId&&[itemId isKindOfClass:[NSNumber class]]) {
-                    Item *item=[[SLDataStore defaultStore] getItemById:itemId];
-                    if(!item) {
-                        item=[[SLDataStore defaultStore] createItem];
-                        item.id=itemId;
-                    }
-                    item.datecreated=[dateFormatter dateFromString:[itemDict objectForKey:@"datecreated"]];
-                    item.order=[itemDict objectForKey:@"order"];
-                    
-                    NSDictionary *boardDict=[itemDict objectForKey:@"board"];
-                    if(boardDict&&[boardDict isKindOfClass:[NSDictionary class]]) {
-                        NSNumber *boardId=[boardDict objectForKey:@"id"];
-                        if(boardId&&[boardId isKindOfClass:[NSNumber class]]) {
-                            Board *board=[[SLDataStore defaultStore] getBoardById:boardId];
-                            if(!board) {
-                                board=[[SLDataStore defaultStore] createBoard];
-                                board.id=boardId;
-                            }
-                            board.comments=[boardDict objectForKey:@"comments"];
-                            NSString *coverImageURL=[boardDict objectForKey:@"coverImage"];
-                            if(coverImageURL&&[coverImageURL isKindOfClass:[NSString class]]&&coverImageURL.length>0) {
-                                //prepend http: because the API data lacks this and starts with //
-                                coverImageURL=[@"http:" stringByAppendingString:coverImageURL];
-                                Image *coverImage=[[SLDataStore defaultStore] getImageByURL:coverImageURL];
-                                if(!coverImage) {
-                                    coverImage=[[SLDataStore defaultStore] createImage];
-                                    coverImage.url=coverImageURL;
-                                    coverImage.primary=[NSNumber numberWithBool:YES];
-                                }
-                                board.coverImage=coverImage;
-                            }
-                            board.datecreated=[dateFormatter dateFromString:[boardDict objectForKey:@"datecreated"]];
-                            board.datemodified=[dateFormatter dateFromString:[boardDict objectForKey:@"datemodified"]];
-                            NSString *desc=[boardDict objectForKey:@"description"];
-                            if(desc&&[desc isKindOfClass:[NSString class]])
-                                board.desc=desc;
-                            board.id=[boardDict objectForKey:@"id"];
-                            board.liked=[boardDict objectForKey:@"liked"];
-                            board.likes=[boardDict objectForKey:@"likes"];
-                            board.refreshKey=[boardDict objectForKey:@"refreshKey"];
-                            board.title=[boardDict objectForKey:@"title"];
-                            board.url=[boardDict objectForKey:@"url"];
-                            board.urlKey=[boardDict objectForKey:@"urlKey"];
-                            
-                            NSDictionary *creatorDict=[boardDict objectForKey:@"creator"];
-                            if(creatorDict&&[creatorDict isKindOfClass:[NSDictionary class]]) {
-                                NSNumber *creatorAid=[creatorDict objectForKey:@"aid"];
-                                if(!creatorAid||![creatorAid isKindOfClass:[NSNumber class]])
-                                    break;
-                                Creator *creator=[[SLDataStore defaultStore] getCreatorByAid:creatorAid];
-                                if(!creator) {
-                                    creator=[[SLDataStore defaultStore] createCreator];
-                                    creator.aid=creatorAid;
-                                }
-                                creator.username=[creatorDict objectForKey:@"username"];
-                                board.creator=creator;
-                            }
-                            item.board=board;
+            NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
+            
+            [managedObjectContext performBlock:^{
+                for(NSDictionary *itemDict in [jsonObj objectForKey:@"items"]) {
+                    NSNumber *itemId=[itemDict objectForKey:@"id"];
+                    if(itemId&&[itemId isKindOfClass:[NSNumber class]]) {
+                        Item *item=(Item *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Item" byField:@"id" andValue:itemId inManagedObjectContext:managedObjectContext];
+                        if(!item) {
+                            item=(Item *)[[SLDataStore defaultStore] createEntityForName:@"Item" inManagedObjectContext:managedObjectContext];
+                            item.id=itemId;
                         }
-                    }
-                    
-                    NSDictionary *productDict=[itemDict objectForKey:@"product"];
-                    if(productDict&&[productDict isKindOfClass:[NSDictionary class]]) {
-                        NSNumber *productId=[productDict objectForKey:@"id"];
-                        if(productId&&[productId isKindOfClass:[NSNumber class]]) {
-                            Product *product=[[SLDataStore defaultStore] getProductById:productId];
-                            if(!product) {
-                                product=[[SLDataStore defaultStore] createProduct];
-                                product.id=productId;
-                            }
-                            product.available=[productDict objectForKey:@"available"];
-                            product.date=[dateFormatter dateFromString:[productDict objectForKey:@"date"]];
-                            NSString *desc=[productDict objectForKey:@"desc"];
-                            if(desc&&[desc isKindOfClass:[NSString class]])
-                                product.desc=desc;
-                            product.liked=[productDict objectForKey:@"liked"];
-                            product.likes=[productDict objectForKey:@"likes"];
-                            product.masterProductId=[productDict objectForKey:@"masterProductId"];
-                            product.name=[productDict objectForKey:@"name"];
-                            product.price=[productDict objectForKey:@"price"];
-                            product.sale=[productDict objectForKey:@"sale"];
-                            product.savings=[productDict objectForKey:@"savings"];
-                            NSNumber *number=[productDict objectForKey:@"shippingCost"];
-                            if(number&&[number isKindOfClass:[NSNumber class]])
-                                product.shippingCost=[productDict objectForKey:@"shippingCost"];
-                            product.shopLink=[productDict objectForKey:@"shopLink"];
-                            product.url=[productDict objectForKey:@"url"];
-                            
-                            NSDictionary *brandDict=[productDict objectForKey:@"brand"];
-                            if(brandDict&&[brandDict isKindOfClass:[NSDictionary class]]) {
-                                NSNumber *brandBid=[brandDict objectForKey:@"bid"];
-                                if(brandBid&&[brandBid isKindOfClass:[NSNumber class]]) {
-                                    Brand *brand=[[SLDataStore defaultStore] getBrandByBid:brandBid];
-                                    if(!brand) {
-                                        brand=[[SLDataStore defaultStore] createBrand];
-                                        brand.bid=brandBid;
-                                    }
-                                    brand.bname=[brandDict objectForKey:@"bname"];
-                                    product.brand=brand;
+                        item.datecreated=[dateFormatter dateFromString:[itemDict objectForKey:@"datecreated"]];
+                        item.order=[itemDict objectForKey:@"order"];
+                        
+                        NSDictionary *boardDict=[itemDict objectForKey:@"board"];
+                        if(boardDict&&[boardDict isKindOfClass:[NSDictionary class]]) {
+                            NSNumber *boardId=[boardDict objectForKey:@"id"];
+                            if(boardId&&[boardId isKindOfClass:[NSNumber class]]) {
+                                Board *board=(Board *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Board" byField:@"id" andValue:boardId inManagedObjectContext:managedObjectContext];
+                                if(!board) {
+                                    board=(Board *)[[SLDataStore defaultStore] createEntityForName:@"Board" inManagedObjectContext:managedObjectContext];
+                                    board.id=boardId;
                                 }
-                            }
-                            
-                            NSDictionary *currencyDict=[productDict objectForKey:@"currency"];
-                            if(currencyDict&&[currencyDict isKindOfClass:[NSDictionary class]]) {
-                                NSNumber *currencyCurid=[currencyDict objectForKey:@"curid"];
-                                if(currencyCurid&&[currencyCurid isKindOfClass:[NSNumber class]]) {
-                                    Currency *currency=[[SLDataStore defaultStore] getCurrencyByCurid:currencyCurid];
-                                    if(!currency) {
-                                        currency=[[SLDataStore defaultStore] createCurrency];
-                                        currency.curid=currencyCurid;
+                                board.comments=[boardDict objectForKey:@"comments"];
+                                NSString *coverImageURL=[boardDict objectForKey:@"coverImage"];
+                                if(coverImageURL&&[coverImageURL isKindOfClass:[NSString class]]&&coverImageURL.length>0) {
+                                    //prepend http: because the API data lacks this and starts with //
+                                    coverImageURL=[@"http:" stringByAppendingString:coverImageURL];
+                                    
+                                    Image *coverImage=(Image *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Image" byField:@"url" andValue:coverImageURL inManagedObjectContext:managedObjectContext];
+                                    if(!coverImage) {
+                                        coverImage=(Image *)[[SLDataStore defaultStore] createEntityForName:@"Image" inManagedObjectContext:managedObjectContext];
+                                        coverImage.url=coverImageURL;
+                                        coverImage.primary=[NSNumber numberWithBool:YES];
                                     }
-                                    currency.curname=[currencyDict objectForKey:@"curname"];
-                                    product.currency=currency;
+                                    board.coverImage=coverImage;
                                 }
-                            }
-                            
-                            NSDictionary *genderDict=[productDict objectForKey:@"gender"];
-                            if(genderDict&&[genderDict isKindOfClass:[NSDictionary class]]) {
-                                NSNumber *genderGenid=[genderDict objectForKey:@"genid"];
-                                if(genderGenid&&[genderGenid isKindOfClass:[NSNumber class]]) {
-                                    Gender *gender=[[SLDataStore defaultStore] getGenderByGenid:genderGenid];
-                                    if(!gender) {
-                                        gender=[[SLDataStore defaultStore] createGender];
-                                        gender.genid=genderGenid;
-                                    }
-                                    gender.genname=[genderDict objectForKey:@"genname"];
-                                    product.gender=gender;
-                                }
-                            }
-                            
-                            NSArray *images=[productDict objectForKey:@"images"];
-                            if(images&&[images isKindOfClass:[NSArray class]]) {
-                                for(NSDictionary *imageDict in images) {
-                                    NSString *imageURL=[imageDict objectForKey:@"url"];
-                                    if(imageURL&&[imageURL isKindOfClass:[NSString class]]&&imageURL.length>0) {
-                                        Image *image=[[SLDataStore defaultStore] getImageByURL:imageURL];
-                                        if(!image) {
-                                            image=[[SLDataStore defaultStore] createImage];
-                                            image.url=imageURL;
+                                board.datecreated=[dateFormatter dateFromString:[boardDict objectForKey:@"datecreated"]];
+                                board.datemodified=[dateFormatter dateFromString:[boardDict objectForKey:@"datemodified"]];
+                                NSString *desc=[boardDict objectForKey:@"description"];
+                                if(desc&&[desc isKindOfClass:[NSString class]])
+                                    board.desc=desc;
+                                board.id=[boardDict objectForKey:@"id"];
+                                board.liked=[boardDict objectForKey:@"liked"];
+                                board.likes=[boardDict objectForKey:@"likes"];
+                                board.refreshKey=[boardDict objectForKey:@"refreshKey"];
+                                board.title=[boardDict objectForKey:@"title"];
+                                board.url=[boardDict objectForKey:@"url"];
+                                board.urlKey=[boardDict objectForKey:@"urlKey"];
+                                
+                                NSDictionary *creatorDict=[boardDict objectForKey:@"creator"];
+                                if(creatorDict&&[creatorDict isKindOfClass:[NSDictionary class]]) {
+                                    NSNumber *creatorAid=[creatorDict objectForKey:@"aid"];
+                                    if(creatorAid&&[creatorAid isKindOfClass:[NSNumber class]]) {
+                                        Creator *creator=(Creator *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Creator" byField:@"aid" andValue:creatorAid inManagedObjectContext:managedObjectContext];
+                                        if(!creator) {
+                                            creator=(Creator *)[[SLDataStore defaultStore] createEntityForName:@"Creator" inManagedObjectContext:managedObjectContext];
+                                            creator.aid=creatorAid;
                                         }
-                                        image.primary=[imageDict objectForKey:@"primary"];
-                                        image.product=product;
+                                        creator.username=[creatorDict objectForKey:@"username"];
+                                        board.creator=creator;
                                     }
                                 }
+                                item.board=board;
                             }
-                            item.product=product;
+                        }
+                        
+                        NSDictionary *productDict=[itemDict objectForKey:@"product"];
+                        if(productDict&&[productDict isKindOfClass:[NSDictionary class]]) {
+                            NSNumber *productId=[productDict objectForKey:@"id"];
+                            if(productId&&[productId isKindOfClass:[NSNumber class]]) {
+                                Product *product=(Product *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Product" byField:@"id" andValue:productId inManagedObjectContext:managedObjectContext];
+                                if(!product) {
+                                    product=(Product *)[[SLDataStore defaultStore] createEntityForName:@"Product" inManagedObjectContext:managedObjectContext];
+                                    product.id=productId;
+                                }
+                                product.available=[productDict objectForKey:@"available"];
+                                product.date=[dateFormatter dateFromString:[productDict objectForKey:@"date"]];
+                                NSString *desc=[productDict objectForKey:@"desc"];
+                                if(desc&&[desc isKindOfClass:[NSString class]])
+                                    product.desc=desc;
+                                product.liked=[productDict objectForKey:@"liked"];
+                                product.likes=[productDict objectForKey:@"likes"];
+                                product.masterProductId=[productDict objectForKey:@"masterProductId"];
+                                product.name=[productDict objectForKey:@"name"];
+                                product.price=[productDict objectForKey:@"price"];
+                                product.sale=[productDict objectForKey:@"sale"];
+                                product.savings=[productDict objectForKey:@"savings"];
+                                NSNumber *number=[productDict objectForKey:@"shippingCost"];
+                                if(number&&[number isKindOfClass:[NSNumber class]])
+                                    product.shippingCost=[productDict objectForKey:@"shippingCost"];
+                                product.shopLink=[productDict objectForKey:@"shopLink"];
+                                product.url=[productDict objectForKey:@"url"];
+                                
+                                NSDictionary *brandDict=[productDict objectForKey:@"brand"];
+                                if(brandDict&&[brandDict isKindOfClass:[NSDictionary class]]) {
+                                    NSNumber *brandBid=[brandDict objectForKey:@"bid"];
+                                    if(brandBid&&[brandBid isKindOfClass:[NSNumber class]]) {
+                                        Brand *brand=(Brand *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Brand" byField:@"bid" andValue:brandBid inManagedObjectContext:managedObjectContext];
+                                        if(!brand) {
+                                            brand=(Brand *)[[SLDataStore defaultStore] createEntityForName:@"Brand" inManagedObjectContext:managedObjectContext];
+                                            brand.bid=brandBid;
+                                        }
+                                        brand.bname=[brandDict objectForKey:@"bname"];
+                                        product.brand=brand;
+                                    }
+                                }
+                                
+                                NSDictionary *currencyDict=[productDict objectForKey:@"currency"];
+                                if(currencyDict&&[currencyDict isKindOfClass:[NSDictionary class]]) {
+                                    NSNumber *currencyCurid=[currencyDict objectForKey:@"curid"];
+                                    if(currencyCurid&&[currencyCurid isKindOfClass:[NSNumber class]]) {
+                                        Currency *currency=(Currency *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Currency" byField:@"curid" andValue:currencyCurid inManagedObjectContext:managedObjectContext];
+                                        if(!currency) {
+                                            currency=(Currency *)[[SLDataStore defaultStore] createEntityForName:@"Currency" inManagedObjectContext:managedObjectContext];
+                                            currency.curid=currencyCurid;
+                                        }
+                                        currency.curname=[currencyDict objectForKey:@"curname"];
+                                        product.currency=currency;
+                                    }
+                                }
+                                
+                                NSDictionary *genderDict=[productDict objectForKey:@"gender"];
+                                if(genderDict&&[genderDict isKindOfClass:[NSDictionary class]]) {
+                                    NSNumber *genderGenid=[genderDict objectForKey:@"genid"];
+                                    if(genderGenid&&[genderGenid isKindOfClass:[NSNumber class]]) {
+                                        Gender *gender=(Gender *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Gender" byField:@"genid" andValue:genderGenid inManagedObjectContext:managedObjectContext];
+                                        if(!gender) {
+                                            gender=(Gender *)[[SLDataStore defaultStore] createEntityForName:@"Gender" inManagedObjectContext:managedObjectContext];
+                                            gender.genid=genderGenid;
+                                        }
+                                        gender.genname=[genderDict objectForKey:@"genname"];
+                                        product.gender=gender;
+                                    }
+                                }
+                                
+                                NSArray *images=[productDict objectForKey:@"images"];
+                                if(images&&[images isKindOfClass:[NSArray class]]) {
+                                    for(NSDictionary *imageDict in images) {
+                                        NSString *imageURL=[imageDict objectForKey:@"url"];
+                                        if(imageURL&&[imageURL isKindOfClass:[NSString class]]&&imageURL.length>0) {
+                                            Image *image=(Image *)[[SLDataStore defaultStore] getManagedObjectOfEntity:@"Image" byField:@"url" andValue:imageURL inManagedObjectContext:managedObjectContext];
+                                            if(!image) {
+                                                image=(Image *)[[SLDataStore defaultStore] createEntityForName:@"Image" inManagedObjectContext:managedObjectContext];
+                                                image.url=imageURL;
+                                            }
+                                            image.primary=[imageDict objectForKey:@"primary"];
+                                            image.product=product;
+                                        }
+                                    }
+                                }
+                                item.product=product;
+                            }
                         }
                     }
                 }
-            }
-        }
-//        [[SLDataStore defaultStore] update];
-        if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataGrabberDelegate)]&&[self.delegate respondsToSelector:@selector(didFinishGrabbingData)]) {
-            [self.delegate didFinishGrabbingData];
+                NSError *error;
+                [managedObjectContext save:&error];
+                if(!error) {
+                    [[SLDataStore defaultStore] save];
+                    [[SLDataStore defaultStore] update];
+                }
+            }];
         }
     }];
     [dataTask resume];

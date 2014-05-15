@@ -20,7 +20,6 @@
 
 @interface SLItemCollectionViewController () {
     NSCache *_imageCache;
-    NSUInteger _maxRow;
     NSUInteger _page;
     CGRect _imageFrame;
 }
@@ -37,10 +36,10 @@
     self.topBarView.layer.shadowRadius=5.0f;
     self.topBarView.layer.shadowOpacity=0.3f;
     _imageCache=[[NSCache alloc] init];
-    _maxRow=0;
-    _page=0;
+    _imageCache.countLimit=100;
     [SLDataGrabber defaultDataGrabber].delegate=self;
     [SLDataStore defaultStore].delegate=self;
+    _page=0;
 }
 
 -(void)hideImage:(UITapGestureRecognizer *)tapGestureRecognizer
@@ -104,7 +103,8 @@
 
 -(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return _maxRow>0?_maxRow:[SLDataStore defaultStore].itemCount+20;
+    NSUInteger itemCount=[SLDataStore defaultStore].itemCount;
+    return itemCount+20;
 }
 
 -(NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
@@ -114,9 +114,12 @@
 
 -(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    if(indexPath.row>=[SLDataStore defaultStore].itemCount) {
-        _page++;
-        [[SLDataGrabber defaultDataGrabber] grabDataOfPage:_page];
+    NSUInteger itemCount=[SLDataStore defaultStore].itemCount;
+    if(indexPath.row>=itemCount) {
+        if(indexPath.row%20==0) {
+            _page=indexPath.row/20+1;
+            [[SLDataGrabber defaultDataGrabber] grabDataOfPage:_page];
+        }
         UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"loadingCell" forIndexPath:indexPath];
         return cell;
     }
@@ -157,21 +160,30 @@
                     NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
                     if(data) {
                         UIImage *image=[UIImage imageWithData:data];
-                        //dispatch UI updates to main queue
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            if(image) {
-                                if(itemImage) {
-                                    itemImage.image=image;
+                        if(image) {
+                            NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
+                            [managedObjectContext performBlock:^{
+                                NSError *error;
+                                Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
+                                if(!error&&backgroundItemImage) {
+                                    backgroundItemImage.image=image;
+                                    [managedObjectContext save:&error];
+                                    if(!error) {
+                                        [[SLDataStore defaultStore] save];
+                                    }
                                 }
-                                [_imageCache setObject:image forKey:itemImage.url];
+                            }];
+                            //dispatch UI updates to main queue
+                            dispatch_async(dispatch_get_main_queue(), ^{
+//                                [_imageCache setObject:image forKey:itemImage.url];
                                 SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
                                 cell.imageView.image=image;
                                 if(cell.activityIndicator) {
                                     [cell.activityIndicator stopAnimating];
                                     cell.activityIndicator.hidden=YES;
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                 });
             }
@@ -184,7 +196,6 @@
 
 -(void)didUpdateResults
 {
-    [[SLDataStore defaultStore] update];
     [self.collectionView reloadData];
 }
 
@@ -196,6 +207,7 @@
 
 -(void)didFinishGrabbingData
 {
+    NSLog(@"Got data");
     [self.collectionView reloadData];
 }
 

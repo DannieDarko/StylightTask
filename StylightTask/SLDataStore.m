@@ -12,13 +12,12 @@
 #import "SLDataStoreDelegate.h"
 
 @interface SLDataStore() {
+    NSManagedObjectContext *_masterManagedObjectContext;
     NSManagedObjectContext *_managedObjectContext;
-    NSManagedObjectContext *_managedBackgroundObjectContext;
-    NSManagedObjectModel *_managedObjectModel;
-    NSPersistentStoreCoordinator *_persistentStoreCoordinator;
     NSFetchedResultsController *_resultsController;
+    NSPersistentStoreCoordinator *_persistentStoreCoordinator;
+    NSManagedObjectModel *_managedObjectModel;
 }
--(NSManagedObjectContext *)managedObjectContext;
 @end
 
 static SLDataStore *_instance;
@@ -40,12 +39,14 @@ static SLDataStore *_instance;
     self = [super init];
     if (self) {
         _managedObjectModel=[NSManagedObjectModel mergedModelFromBundles:[NSArray arrayWithObject:[NSBundle mainBundle]]];
-        _managedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         _persistentStoreCoordinator=[[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:_managedObjectModel];
         NSString *storePath=[[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"DataStore.sqlite"];
         [_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:[NSURL fileURLWithPath:storePath] options:@{NSSQLitePragmasOption: @{@"journal_mode": @"wal", @"synchronous": @"normal"}} error:nil];
         
-        _managedObjectContext.persistentStoreCoordinator=_persistentStoreCoordinator;
+        _masterManagedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        _masterManagedObjectContext.persistentStoreCoordinator=_persistentStoreCoordinator;
+        _managedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        _managedObjectContext.parentContext=_masterManagedObjectContext;
         
         NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:@"Item"];
         fetchRequest.fetchBatchSize=20;
@@ -58,64 +59,13 @@ static SLDataStore *_instance;
     return self;
 }
 
--(NSManagedObjectContext *)managedObjectContext
+-(NSManagedObject *)createEntityForName:(NSString *)entityName inManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
-    if(![NSThread currentThread].isMainThread) {
-        if(!_managedBackgroundObjectContext) {
-            _managedBackgroundObjectContext=[[NSManagedObjectContext alloc] init];
-            _managedBackgroundObjectContext.persistentStoreCoordinator=_persistentStoreCoordinator;
-        }
-        return _managedBackgroundObjectContext;
-    }
-    return _managedObjectContext;
+    NSManagedObject *managedObject=[NSEntityDescription insertNewObjectForEntityForName:entityName inManagedObjectContext:managedObjectContext];
+    return managedObject;
 }
 
--(Item *)createItem
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Item" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Product *)createProduct
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Product" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Image *)createImage
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Image" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Brand *)createBrand
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Brand" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Gender *)createGender
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Gender" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Currency *)createCurrency
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Currency" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Shop *)createShop
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Shop" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Board *)createBoard
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Board" inManagedObjectContext:self.managedObjectContext];
-}
-
--(Creator *)createCreator
-{
-    return [NSEntityDescription insertNewObjectForEntityForName:@"Creator" inManagedObjectContext:self.managedObjectContext];
-}
-
--(NSManagedObject *)getManagedObjectOfEntity:(NSString *)entityName byField:(NSString *)field andValue:(NSObject *)value
+-(NSManagedObject *)getManagedObjectOfEntity:(NSString *)entityName byField:(NSString *)field andValue:(NSObject *)value inManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
 {
     NSManagedObject *managedObject=nil;
     NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:entityName];
@@ -125,57 +75,20 @@ static SLDataStore *_instance;
     [fetchRequest setSortDescriptors:@[sortDescriptor]];
     
     NSError *error = nil;
-    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:&error];
     if (!error&&fetchedObjects&&fetchedObjects.count>0) {
         managedObject=fetchedObjects.firstObject;
+    }else if(error) {
+        NSLog(@"Error: %@",error);
     }
     return managedObject;
 }
 
--(Item *)getItemById:(NSNumber *)itemId
+-(NSManagedObjectContext *)newManagedObjectContext
 {
-    return (Item *)[self getManagedObjectOfEntity:@"Item" byField:@"id" andValue:itemId];
-}
-
--(Board *)getBoardById:(NSNumber *)boardId
-{
-    return (Board *)[self getManagedObjectOfEntity:@"Board" byField:@"id" andValue:boardId];
-}
-
--(Creator *)getCreatorByAid:(NSNumber *)creatorAid
-{
-    return (Creator *)[self getManagedObjectOfEntity:@"Creator" byField:@"aid" andValue:creatorAid];
-}
-
--(Product *)getProductById:(NSNumber *)productId
-{
-    return (Product *)[self getManagedObjectOfEntity:@"Product" byField:@"id" andValue:productId];
-}
-
--(Brand *)getBrandByBid:(NSNumber *)brandBid
-{
-    return (Brand *)[self getManagedObjectOfEntity:@"Brand" byField:@"bid" andValue:brandBid];
-}
-
--(Currency *)getCurrencyByCurid:(NSNumber *)currencyId
-{
-    return (Currency *)[self getManagedObjectOfEntity:@"Currency" byField:@"curid" andValue:currencyId];
-}
-
--(Gender *)getGenderByGenid:(NSNumber *)genderId
-{
-    return (Gender *)[self getManagedObjectOfEntity:@"Gender" byField:@"genid" andValue:genderId];
-}
-
--(Image *)getImageByURL:(NSString *)imageURL
-{
-    return (Image *)[self getManagedObjectOfEntity:@"Image" byField:@"url" andValue:imageURL];
-}
-
--(NSUInteger)productCount
-{
-    NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:@"Product"];
-    return [self.managedObjectContext countForFetchRequest:fetchRequest error:nil];
+    NSManagedObjectContext *privateContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    privateContext.parentContext=_managedObjectContext;
+    return privateContext;
 }
 
 -(NSUInteger)itemCount
@@ -197,8 +110,14 @@ static SLDataStore *_instance;
 
 -(void)save
 {
-    NSError *error;
-    [_managedObjectContext save:&error];
+    [_managedObjectContext performBlock:^{
+        NSError *error;
+        [_managedObjectContext save:&error];
+        [_masterManagedObjectContext performBlock:^{
+            NSError *error;
+            [_masterManagedObjectContext save:&error];
+        }];
+    }];
 }
 
 #pragma mark NSResultsControllerDelegate
@@ -206,7 +125,7 @@ static SLDataStore *_instance;
 -(void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {
     if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(didReceiveChangesAtIndexPath:)]) {
-        [self.delegate didReceiveChangesAtIndexPath:indexPath];
+        [self.delegate didReceiveChangesAtIndexPath:newIndexPath];
     }
 }
 
