@@ -18,6 +18,7 @@
 -(NSManagedObject *)createEntityForName:(NSString *)entityName inManagedObjectContext:(NSManagedObjectContext *)managedObjectContext;
 -(NSUInteger)itemCount;
 -(Item *)itemAtIndexPath:(NSIndexPath *)indexPath;
+-(NSManagedObjectContext *)managedObjectContext;
 -(NSManagedObjectContext *)newManagedObjectContext;
 -(void)update;
 -(void)save;

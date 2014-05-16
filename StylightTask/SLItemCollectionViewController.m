@@ -63,8 +63,18 @@
     Item *item=[[SLDataStore defaultStore] itemAtIndexPath:indexPath];
     SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
     NSPredicate *predicate=[NSPredicate predicateWithFormat:@"primary=YES"];
-    Image *image=item.product?[item.product.images filteredSetUsingPredicate:predicate].anyObject:item.board.coverImage;
-    if(image&&image.image) {
+    Image *itemImage=item.product?[item.product.images filteredSetUsingPredicate:predicate].anyObject:item.board.coverImage;
+    UIImage *image=nil;
+    if(itemImage) {
+        image=[_imageCache objectForKey:itemImage.url];
+        if(!image) {
+            image=itemImage.image;
+            if(!image) {
+                image=[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]]];
+            }
+        }
+    }
+    if(image) {
         self.collectionView.userInteractionEnabled=NO;
         UIView *largeImageView=[[UIView alloc] initWithFrame:self.collectionView.frame];
         largeImageView.backgroundColor=[UIColor clearColor];
@@ -75,7 +85,7 @@
         backgroundView.tag=1;
         [largeImageView addSubview:backgroundView];
         
-        UIImageView *imageView=[[UIImageView alloc] initWithImage:image.image];
+        UIImageView *imageView=[[UIImageView alloc] initWithImage:image];
         imageView.contentMode=UIViewContentModeScaleAspectFit;
         imageView.frame=CGRectMake(cell.frame.origin.x+cell.imageView.frame.origin.x,
                                    cell.frame.origin.y+cell.imageView.frame.origin.y-self.collectionView.contentOffset.y,
@@ -166,16 +176,18 @@
                                 NSError *error;
                                 Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
                                 if(!error&&backgroundItemImage) {
-                                    backgroundItemImage.image=image;
+//                                    backgroundItemImage.image=image;
                                     [managedObjectContext save:&error];
                                     if(!error) {
                                         [[SLDataStore defaultStore] save];
+                                    }else {
+                                        NSLog(@"Error: %@",error);
                                     }
                                 }
                             }];
                             //dispatch UI updates to main queue
                             dispatch_async(dispatch_get_main_queue(), ^{
-//                                [_imageCache setObject:image forKey:itemImage.url];
+                                [_imageCache setObject:image forKey:itemImage.url];
                                 SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
                                 cell.imageView.image=image;
                                 if(cell.activityIndicator) {

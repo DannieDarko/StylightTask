@@ -105,7 +105,7 @@
         <element name="Creator" positionX="-9" positionY="144" width="128" height="403"/>
         <element name="Currency" positionX="-18" positionY="45" width="128" height="88"/>
         <element name="Gender" positionX="0" positionY="81" width="128" height="103"/>
-        <element name="Image" positionX="18" positionY="108" width="128" height="118"/>
+        <element name="Image" positionX="18" positionY="108" width="128" height="120"/>
         <element name="Item" positionX="-63" positionY="-18" width="128" height="118"/>
         <element name="Product" positionX="-54" positionY="18" width="128" height="343"/>
         <element name="Shop" positionX="36" positionY="171" width="128" height="88"/>

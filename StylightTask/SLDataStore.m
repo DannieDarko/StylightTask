@@ -51,7 +51,7 @@ static SLDataStore *_instance;
         NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:@"Item"];
         fetchRequest.fetchBatchSize=20;
         fetchRequest.sortDescriptors=@[[NSSortDescriptor sortDescriptorWithKey:@"id" ascending:NO]];
-        _resultsController=[[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:@"Master"];
+        _resultsController=[[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];
         _resultsController.delegate=self;
         
         [self update];
@@ -84,6 +84,11 @@ static SLDataStore *_instance;
     return managedObject;
 }
 
+-(NSManagedObjectContext *)managedObjectContext
+{
+    return _managedObjectContext;
+}
+
 -(NSManagedObjectContext *)newManagedObjectContext
 {
     NSManagedObjectContext *privateContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
@@ -103,7 +108,7 @@ static SLDataStore *_instance;
 
 -(void)update
 {
-    [NSFetchedResultsController deleteCacheWithName:@"Master"];
+//    [NSFetchedResultsController deleteCacheWithName:@"Master"];
     NSError *error;
     [_resultsController performFetch:&error];
 }
@@ -113,10 +118,17 @@ static SLDataStore *_instance;
     [_managedObjectContext performBlock:^{
         NSError *error;
         [_managedObjectContext save:&error];
-        [_masterManagedObjectContext performBlock:^{
-            NSError *error;
-            [_masterManagedObjectContext save:&error];
-        }];
+        if(!error) {
+            [_masterManagedObjectContext performBlock:^{
+                NSError *error;
+                [_masterManagedObjectContext save:&error];
+                if(error) {
+                    NSLog(@"Error: %@",error);
+                }
+            }];
+        }else {
+            NSLog(@"Error: %@",error);
+        }
     }];
 }
 
