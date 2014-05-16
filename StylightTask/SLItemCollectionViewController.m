@@ -10,7 +10,7 @@
 
 #import "SLItemCollectionViewController.h"
 #import "SLItemCollectionViewCell.h"
-#import "SLDataGrabber.h"
+#import "SLSyncManager.h"
 #import "SLDataStore.h"
 #import "Item.h"
 #import "Product.h"
@@ -37,7 +37,6 @@
     self.topBarView.layer.shadowOpacity=0.3f;
     _imageCache=[[NSCache alloc] init];
     _imageCache.countLimit=100;
-    [SLDataGrabber defaultDataGrabber].delegate=self;
     [SLDataStore defaultStore].delegate=self;
     _page=0;
 }
@@ -128,7 +127,7 @@
     if(indexPath.row>=itemCount) {
         if(indexPath.row%20==0) {
             _page=indexPath.row/20+1;
-            [[SLDataGrabber defaultDataGrabber] grabDataOfPage:_page];
+            [[SLSyncManager defaultManager] syncDataOfPage:_page];
         }
         UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"loadingCell" forIndexPath:indexPath];
         return cell;
@@ -166,36 +165,45 @@
                 cell.imageView.image=nil;
                 
                 //dispatch loading the image from url into background queue
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-                    NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
-                    if(data) {
-                        UIImage *image=[UIImage imageWithData:data];
-                        if(image) {
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [_imageCache setObject:image forKey:itemImage.url];
-                                SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
-                                cell.imageView.image=image;
-                                if(cell.activityIndicator) {
-                                    [cell.activityIndicator stopAnimating];
-                                    cell.activityIndicator.hidden=YES;
-                                }
-                            });
-
-                            NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
-                            [managedObjectContext performBlock:^{
-                                NSError *error;
-                                Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
-                                if(!error&&backgroundItemImage) {
-                                    backgroundItemImage.image=image;
-                                    [managedObjectContext save:&error];
-                                    if(!error) {
-                                        [[SLDataStore defaultStore] save];
-                                    }else {
-                                        NSLog(@"Error: %@",error);
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+                    @autoreleasepool {
+                        NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
+                        if(data) {
+                            UIImage *image=[UIImage imageWithData:data];
+                            if(image) {
+                                //dispatch UI updates to main queue
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [_imageCache setObject:image forKey:itemImage.url];
+                                    SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+                                    cell.imageView.image=image;
+                                    if(cell.activityIndicator) {
+                                        [cell.activityIndicator stopAnimating];
+                                        cell.activityIndicator.hidden=YES;
                                     }
-                                }
-                            }];
-                            //dispatch UI updates to main queue
+                                });
+                                
+                                NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
+                                [managedObjectContext performBlock:^{
+                                    NSError *error;
+                                    Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
+                                    if(!error&&backgroundItemImage) {
+                                        backgroundItemImage.image=image;
+                                        [managedObjectContext save:&error];
+                                        if(!error) {
+                                            dispatch_async(dispatch_get_main_queue(), ^{
+                                                NSManagedObjectContext *parentContext=managedObjectContext.parentContext;
+                                                NSError *error;
+                                                [parentContext save:&error];
+                                                if(error) {
+                                                    NSLog(@"Error: %@",error);
+                                                }
+                                            });
+                                        }else {
+                                            NSLog(@"Error: %@",error);
+                                        }
+                                    }
+                                }];
+                            }
                         }
                     }
                 });
@@ -214,14 +222,6 @@
 
 -(void)didReceiveChangesAtIndexPath:(NSIndexPath *)indexPath
 {
-}
-
-#pragma mark SLDataGrabberDelegate
-
--(void)didFinishGrabbingData
-{
-    NSLog(@"Got data");
-    [self.collectionView reloadData];
 }
 
 - (void)didReceiveMemoryWarning

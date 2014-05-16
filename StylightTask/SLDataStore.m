@@ -29,7 +29,7 @@ static SLDataStore *_instance;
 {
     @synchronized(self) {
         if(_instance==nil)
-            _instance=[[SLDataStore alloc] init];
+            _instance=[[[self class] alloc] init];
         return _instance;
     }
 }

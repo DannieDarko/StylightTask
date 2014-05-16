@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		65437CA81922CD84006E63DC /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65437CA71922CD84006E63DC /* QuartzCore.framework */; };
+		65928E931926090E00A9EF91 /* SLSyncManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 65928E921926090E00A9EF91 /* SLSyncManager.m */; };
 		65CFD91D190A30820034154A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD91C190A30820034154A /* Foundation.framework */; };
 		65CFD91F190A30820034154A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD91E190A30820034154A /* CoreGraphics.framework */; };
 		65CFD921190A30820034154A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD920190A30820034154A /* UIKit.framework */; };
@@ -52,6 +53,8 @@
 /* Begin PBXFileReference section */
 		65437CA71922CD84006E63DC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		65437CA9192366F5006E63DC /* SLDataStoreDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SLDataStoreDelegate.h; sourceTree = "<group>"; };
+		65928E911926090E00A9EF91 /* SLSyncManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SLSyncManager.h; sourceTree = "<group>"; };
+		65928E921926090E00A9EF91 /* SLSyncManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SLSyncManager.m; sourceTree = "<group>"; };
 		65CFD919190A30820034154A /* StylightTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StylightTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65CFD91C190A30820034154A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		65CFD91E190A30820034154A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -214,6 +217,8 @@
 				65CFD96F190BAAD20034154A /* SLDataStore.h */,
 				65CFD970190BAAD20034154A /* SLDataStore.m */,
 				65437CA9192366F5006E63DC /* SLDataStoreDelegate.h */,
+				65928E911926090E00A9EF91 /* SLSyncManager.h */,
+				65928E921926090E00A9EF91 /* SLSyncManager.m */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -362,6 +367,7 @@
 				65CFD9AB1917A04D0034154A /* Product.m in Sources */,
 				65CFD9A51917A04D0034154A /* Shop.m in Sources */,
 				65CFD936190A30820034154A /* SLItemCollectionViewController.m in Sources */,
+				65928E931926090E00A9EF91 /* SLSyncManager.m in Sources */,
 				65CFD92D190A30820034154A /* AppDelegate.m in Sources */,
 				65CFD971190BAAD20034154A /* SLDataStore.m in Sources */,
 				65CFD9931917A04C0034154A /* Image.m in Sources */,

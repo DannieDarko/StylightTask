@@ -12,6 +12,7 @@
 
 @interface SLDataGrabber : NSObject
 +(SLDataGrabber *)defaultDataGrabber;
--(void)grabDataOfPage:(NSUInteger)page;
+-(void)grabDataOfPage:(NSUInteger)page completionHandler:(void(^)(NSData *data, NSURLResponse *response, NSError *error))completionHandler;
+-(void)cancelSession;
 @property (nonatomic, strong) id<SLDataGrabberDelegate> delegate;
 @end
