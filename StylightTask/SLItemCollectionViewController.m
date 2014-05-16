@@ -171,21 +171,6 @@
                     if(data) {
                         UIImage *image=[UIImage imageWithData:data];
                         if(image) {
-                            NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
-                            [managedObjectContext performBlock:^{
-                                NSError *error;
-                                Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
-                                if(!error&&backgroundItemImage) {
-//                                    backgroundItemImage.image=image;
-                                    [managedObjectContext save:&error];
-                                    if(!error) {
-                                        [[SLDataStore defaultStore] save];
-                                    }else {
-                                        NSLog(@"Error: %@",error);
-                                    }
-                                }
-                            }];
-                            //dispatch UI updates to main queue
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 [_imageCache setObject:image forKey:itemImage.url];
                                 SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
@@ -195,6 +180,22 @@
                                     cell.activityIndicator.hidden=YES;
                                 }
                             });
+
+                            NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
+                            [managedObjectContext performBlock:^{
+                                NSError *error;
+                                Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
+                                if(!error&&backgroundItemImage) {
+                                    backgroundItemImage.image=image;
+                                    [managedObjectContext save:&error];
+                                    if(!error) {
+                                        [[SLDataStore defaultStore] save];
+                                    }else {
+                                        NSLog(@"Error: %@",error);
+                                    }
+                                }
+                            }];
+                            //dispatch UI updates to main queue
                         }
                     }
                 });
