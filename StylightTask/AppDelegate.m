@@ -7,7 +7,6 @@
 //
 
 #import "AppDelegate.h"
-#import "SLDataStore.h"
 
 @implementation AppDelegate
 
@@ -25,7 +24,6 @@
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    [[SLDataStore defaultStore] save];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
@@ -40,7 +38,6 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
-    [[SLDataStore defaultStore] save];
 }
 
 @end

@@ -8,7 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
+@class Image;
+
 @interface SLSyncManager : NSObject
 +(SLSyncManager *)defaultManager;
 -(void)syncDataOfPage:(NSUInteger)page;
+-(void)syncImage:(Image *)image completion:(void(^)(Image *image))completionBlock;
 @end

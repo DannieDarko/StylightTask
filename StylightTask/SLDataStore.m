@@ -17,6 +17,7 @@
     NSFetchedResultsController *_resultsController;
     NSPersistentStoreCoordinator *_persistentStoreCoordinator;
     NSManagedObjectModel *_managedObjectModel;
+    dispatch_queue_t _backgroundQueue;
 }
 @end
 
@@ -38,13 +39,17 @@ static SLDataStore *_instance;
 {
     self = [super init];
     if (self) {
+        _backgroundQueue=dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
+
         _managedObjectModel=[NSManagedObjectModel mergedModelFromBundles:[NSArray arrayWithObject:[NSBundle mainBundle]]];
         _persistentStoreCoordinator=[[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:_managedObjectModel];
         NSString *storePath=[[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"DataStore.sqlite"];
         [_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:[NSURL fileURLWithPath:storePath] options:@{NSSQLitePragmasOption: @{@"journal_mode": @"wal", @"synchronous": @"normal"}} error:nil];
         
-        _masterManagedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        _masterManagedObjectContext.persistentStoreCoordinator=_persistentStoreCoordinator;
+        dispatch_sync(_backgroundQueue, ^{
+            _masterManagedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+            _masterManagedObjectContext.persistentStoreCoordinator=_persistentStoreCoordinator;
+        });
         _managedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         _managedObjectContext.parentContext=_masterManagedObjectContext;
         
@@ -93,6 +98,27 @@ static SLDataStore *_instance;
 {
     NSManagedObjectContext *privateContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     privateContext.parentContext=_managedObjectContext;
+    [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:privateContext queue:nil usingBlock:^(NSNotification *note) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_managedObjectContext performBlock:^{
+                NSError *error;
+                [_managedObjectContext save:&error];
+                if(!error) {
+                    dispatch_async(_backgroundQueue, ^{
+                        [_masterManagedObjectContext performBlock:^{
+                            NSError *error;
+                            [_masterManagedObjectContext save:&error];
+                            if(error) {
+                                NSLog(@"Error: %@",error);
+                            }
+                        }];
+                    });
+                }else {
+                    NSLog(@"Error: %@",error);
+                }
+            }];
+        });
+    }];
     return privateContext;
 }
 
@@ -111,25 +137,6 @@ static SLDataStore *_instance;
 //    [NSFetchedResultsController deleteCacheWithName:@"Master"];
     NSError *error;
     [_resultsController performFetch:&error];
-}
-
--(void)save
-{
-    [_managedObjectContext performBlock:^{
-        NSError *error;
-        [_managedObjectContext save:&error];
-        if(!error) {
-            [_masterManagedObjectContext performBlock:^{
-                NSError *error;
-                [_masterManagedObjectContext save:&error];
-                if(error) {
-                    NSLog(@"Error: %@",error);
-                }
-            }];
-        }else {
-            NSLog(@"Error: %@",error);
-        }
-    }];
 }
 
 #pragma mark NSResultsControllerDelegate

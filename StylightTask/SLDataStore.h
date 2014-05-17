@@ -21,6 +21,5 @@
 -(NSManagedObjectContext *)managedObjectContext;
 -(NSManagedObjectContext *)newManagedObjectContext;
 -(void)update;
--(void)save;
 @property (nonatomic, strong) id<SLDataStoreDelegate>delegate;
 @end

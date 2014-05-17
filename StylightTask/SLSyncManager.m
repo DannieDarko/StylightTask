@@ -225,7 +225,6 @@ static NSString * const kDateFormat=@"yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'S";
                     [managedObjectContext save:&error];
                     if(!error) {
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            [[SLDataStore defaultStore] save];
                             [[SLDataStore defaultStore] update];
                         });
                     }
@@ -233,6 +232,38 @@ static NSString * const kDateFormat=@"yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'S";
             }
             });
             }];
+}
+
+-(void)syncImage:(Image *)image completion:(void(^)(Image *image))completionBlock
+{
+    //dispatch loading the image from url into background queue
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        @autoreleasepool {
+            NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:image.url]];
+            if(data) {
+                image.image=[UIImage imageWithData:data];
+                if(image.image) {
+                    //dispatch UI updates to main queue
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completionBlock(image);
+                    });
+                    
+                    NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
+                    [managedObjectContext performBlock:^{
+                        NSError *error;
+                        Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:image.objectID error:&error];
+                        if(!error&&backgroundItemImage) {
+                            backgroundItemImage.image=image.image;
+                            [managedObjectContext save:&error];
+                            if(error) {
+                                NSLog(@"Error: %@",error);
+                            }
+                        }
+                    }];
+                }
+            }
+        }
+    });
 }
 
 #pragma mark private

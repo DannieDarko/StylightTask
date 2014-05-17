@@ -163,50 +163,15 @@
                 [cell.activityIndicator startAnimating];
                 cell.activityIndicator.hidden=NO;
                 cell.imageView.image=nil;
-                
-                //dispatch loading the image from url into background queue
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-                    @autoreleasepool {
-                        NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]];
-                        if(data) {
-                            UIImage *image=[UIImage imageWithData:data];
-                            if(image) {
-                                //dispatch UI updates to main queue
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    [_imageCache setObject:image forKey:itemImage.url];
-                                    SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
-                                    cell.imageView.image=image;
-                                    if(cell.activityIndicator) {
-                                        [cell.activityIndicator stopAnimating];
-                                        cell.activityIndicator.hidden=YES;
-                                    }
-                                });
-                                
-                                NSManagedObjectContext *managedObjectContext=[[SLDataStore defaultStore] newManagedObjectContext];
-                                [managedObjectContext performBlock:^{
-                                    NSError *error;
-                                    Image *backgroundItemImage=(Image *)[managedObjectContext existingObjectWithID:itemImage.objectID error:&error];
-                                    if(!error&&backgroundItemImage) {
-                                        backgroundItemImage.image=image;
-                                        [managedObjectContext save:&error];
-                                        if(!error) {
-                                            dispatch_async(dispatch_get_main_queue(), ^{
-                                                NSManagedObjectContext *parentContext=managedObjectContext.parentContext;
-                                                NSError *error;
-                                                [parentContext save:&error];
-                                                if(error) {
-                                                    NSLog(@"Error: %@",error);
-                                                }
-                                            });
-                                        }else {
-                                            NSLog(@"Error: %@",error);
-                                        }
-                                    }
-                                }];
-                            }
-                        }
+                [[SLSyncManager defaultManager] syncImage:itemImage completion:^(Image *image) {
+                    [_imageCache setObject:image.image forKey:image.url];
+                    SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+                    cell.imageView.image=image.image;
+                    if(cell.activityIndicator) {
+                        [cell.activityIndicator stopAnimating];
+                        cell.activityIndicator.hidden=YES;
                     }
-                });
+                }];
             }
         }
     }
