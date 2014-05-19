@@ -124,11 +124,11 @@
 -(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     NSUInteger itemCount=[SLDataStore defaultStore].itemCount;
+    if(indexPath.row%20==0) {
+        _page=indexPath.row/20+1;
+        [[SLSyncManager defaultManager] syncDataOfPage:_page];
+    }
     if(indexPath.row>=itemCount) {
-        if(indexPath.row%20==0) {
-            _page=indexPath.row/20+1;
-            [[SLSyncManager defaultManager] syncDataOfPage:_page];
-        }
         UICollectionViewCell *cell=[collectionView dequeueReusableCellWithReuseIdentifier:@"loadingCell" forIndexPath:indexPath];
         return cell;
     }

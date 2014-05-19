@@ -24,8 +24,11 @@ static NSDateFormatter *_dateFormatter;
 
 static NSString * const kSUCCESS=@"SUCCESS";
 static NSString * const kDateFormat=@"yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'S";
+static NSUInteger const kTimeBetweenSyncs=15*60;
 
-@interface SLSyncManager (private)
+@interface SLSyncManager () {
+    NSMutableDictionary *_syncDateDictionary;
+}
 -(NSObject *)objectForKey:(NSString *)key fromDictionary:(NSDictionary *)dictionary;
 -(NSDate *)dateFromString:(NSString *)dateString;
 -(BOOL)objectHasValue:(NSObject *)object isKindOfClass:(Class)class;
@@ -50,13 +53,20 @@ static NSString * const kDateFormat=@"yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'S";
 {
     self = [super init];
     if (self) {
-        
+        _syncDateDictionary=[[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
 -(void)syncDataOfPage:(NSUInteger)page
 {
+    NSDate *lastSyncDate=[_syncDateDictionary objectForKey:[NSString stringWithFormat:@"%li",(long)page]];
+    if(lastSyncDate&&[lastSyncDate timeIntervalSinceNow]+kTimeBetweenSyncs>0) {
+        NSLog(@"Last sync too recent");
+        return;
+    }else {
+    
+    }
     [[SLDataGrabber defaultDataGrabber] grabDataOfPage:page completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
             if(error) {
                 NSLog(@"Error: %@",error.description);
@@ -224,6 +234,7 @@ static NSString * const kDateFormat=@"yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'S";
                     NSError *error;
                     [managedObjectContext save:&error];
                     if(!error) {
+                        [_syncDateDictionary setObject:[NSDate date] forKey:[NSString stringWithFormat:@"%li",(long)page]];
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [[SLDataStore defaultStore] update];
                         });
