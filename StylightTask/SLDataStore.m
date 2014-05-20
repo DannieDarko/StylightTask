@@ -52,6 +52,11 @@ static SLDataStore *_instance;
         });
         _managedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         _managedObjectContext.parentContext=_masterManagedObjectContext;
+//        [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:_managedObjectContext queue:nil usingBlock:^(NSNotification *note) {
+//                [_masterManagedObjectContext performBlock:^{
+//                    [_masterManagedObjectContext save:nil];
+//                }];
+//        }];
         
         NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:@"Item"];
         fetchRequest.fetchBatchSize=20;
@@ -99,25 +104,12 @@ static SLDataStore *_instance;
     NSManagedObjectContext *privateContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     privateContext.parentContext=_managedObjectContext;
     [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:privateContext queue:nil usingBlock:^(NSNotification *note) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_managedObjectContext performBlock:^{
-                NSError *error;
-                [_managedObjectContext save:&error];
-                if(!error) {
-                    dispatch_async(_backgroundQueue, ^{
-                        [_masterManagedObjectContext performBlock:^{
-                            NSError *error;
-                            [_masterManagedObjectContext save:&error];
-                            if(error) {
-                                NSLog(@"Error: %@",error);
-                            }
-                        }];
-                    });
-                }else {
-                    NSLog(@"Error: %@",error);
-                }
+        [_managedObjectContext performBlockAndWait:^{
+            [_managedObjectContext save:nil];
+            [_masterManagedObjectContext performBlockAndWait:^{
+                [_masterManagedObjectContext save:nil];
             }];
-        });
+        }];
     }];
     return privateContext;
 }
