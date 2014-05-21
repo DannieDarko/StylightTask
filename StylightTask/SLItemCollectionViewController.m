@@ -67,7 +67,8 @@
     if(itemImage) {
         image=[_imageCache objectForKey:itemImage.url];
         if(!image) {
-            image=itemImage.image;
+            if(itemImage.image)
+                image=[UIImage imageWithData:itemImage.image];
             if(!image) {
                 image=[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]]];
             }
@@ -149,7 +150,7 @@
             UIImage *image=[_imageCache objectForKey:itemImage.url];
             if(!image&&itemImage&&itemImage.image) {
                 //get image from Core Data if it wasn't cached
-                image=itemImage.image;
+                image=[UIImage imageWithData:itemImage.image];
             }
             if(image) {
                 //display the image if there was any within cache or Core Data
@@ -163,10 +164,11 @@
                 [cell.activityIndicator startAnimating];
                 cell.activityIndicator.hidden=NO;
                 cell.imageView.image=nil;
-                [[SLSyncManager defaultManager] syncImage:itemImage completion:^(Image *image) {
-                    [_imageCache setObject:image.image forKey:image.url];
+                [[SLSyncManager defaultManager] syncImage:itemImage completion:^(Image *itemImage) {
+                    UIImage *image=[UIImage imageWithData:itemImage.image];
+                    [_imageCache setObject:image forKey:itemImage.url];
                     SLItemCollectionViewCell *cell=(SLItemCollectionViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
-                    cell.imageView.image=image.image;
+                    cell.imageView.image=image;
                     if(cell.activityIndicator) {
                         [cell.activityIndicator stopAnimating];
                         cell.activityIndicator.hidden=YES;

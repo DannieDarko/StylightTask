@@ -252,7 +252,7 @@ static NSUInteger const kTimeBetweenSyncs=15*60;
         @autoreleasepool {
             NSData *data=[NSData dataWithContentsOfURL:[NSURL URLWithString:image.url]];
             if(data) {
-                image.image=[UIImage imageWithData:data];
+                image.image=data;
                 if(image.image) {
                     //dispatch UI updates to main queue
                     dispatch_async(dispatch_get_main_queue(), ^{

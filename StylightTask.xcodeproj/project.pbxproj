@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65094DDA192C921900193DA5 /* Image.m in Sources */ = {isa = PBXBuildFile; fileRef = 65094DD9192C921900193DA5 /* Image.m */; };
 		65437CA81922CD84006E63DC /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65437CA71922CD84006E63DC /* QuartzCore.framework */; };
 		65928E931926090E00A9EF91 /* SLSyncManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 65928E921926090E00A9EF91 /* SLSyncManager.m */; };
 		65CFD91D190A30820034154A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CFD91C190A30820034154A /* Foundation.framework */; };
@@ -28,7 +29,6 @@
 		65CFD959190BA5C10034154A /* SLData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD957190BA5C10034154A /* SLData.xcdatamodeld */; };
 		65CFD971190BAAD20034154A /* SLDataStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD970190BAAD20034154A /* SLDataStore.m */; };
 		65CFD9901915047A0034154A /* SLItemCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD98F1915047A0034154A /* SLItemCollectionViewCell.m */; };
-		65CFD9931917A04C0034154A /* Image.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD9921917A04C0034154A /* Image.m */; };
 		65CFD9961917A04D0034154A /* Board.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD9951917A04D0034154A /* Board.m */; };
 		65CFD9991917A04D0034154A /* Currency.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD9981917A04D0034154A /* Currency.m */; };
 		65CFD99C1917A04D0034154A /* Item.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CFD99B1917A04D0034154A /* Item.m */; };
@@ -51,6 +51,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		65094DD8192C921900193DA5 /* Image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Image.h; sourceTree = "<group>"; };
+		65094DD9192C921900193DA5 /* Image.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Image.m; sourceTree = "<group>"; };
 		65437CA71922CD84006E63DC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		65437CA9192366F5006E63DC /* SLDataStoreDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SLDataStoreDelegate.h; sourceTree = "<group>"; };
 		65928E911926090E00A9EF91 /* SLSyncManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SLSyncManager.h; sourceTree = "<group>"; };
@@ -83,8 +85,6 @@
 		65CFD987190E18040034154A /* SLDataGrabberDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SLDataGrabberDelegate.h; sourceTree = "<group>"; };
 		65CFD98E1915047A0034154A /* SLItemCollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SLItemCollectionViewCell.h; sourceTree = "<group>"; };
 		65CFD98F1915047A0034154A /* SLItemCollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SLItemCollectionViewCell.m; sourceTree = "<group>"; };
-		65CFD9911917A04C0034154A /* Image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Image.h; sourceTree = "<group>"; };
-		65CFD9921917A04C0034154A /* Image.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Image.m; sourceTree = "<group>"; };
 		65CFD9941917A04D0034154A /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		65CFD9951917A04D0034154A /* Board.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Board.m; sourceTree = "<group>"; };
 		65CFD9971917A04D0034154A /* Currency.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Currency.h; sourceTree = "<group>"; };
@@ -227,6 +227,8 @@
 			isa = PBXGroup;
 			children = (
 				65CFD957190BA5C10034154A /* SLData.xcdatamodeld */,
+				65094DD8192C921900193DA5 /* Image.h */,
+				65094DD9192C921900193DA5 /* Image.m */,
 				65CFD9A91917A04D0034154A /* Product.h */,
 				65CFD9AA1917A04D0034154A /* Product.m */,
 				65CFD9A61917A04D0034154A /* Creator.h */,
@@ -243,8 +245,6 @@
 				65CFD9981917A04D0034154A /* Currency.m */,
 				65CFD9941917A04D0034154A /* Board.h */,
 				65CFD9951917A04D0034154A /* Board.m */,
-				65CFD9911917A04C0034154A /* Image.h */,
-				65CFD9921917A04C0034154A /* Image.m */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -370,10 +370,10 @@
 				65928E931926090E00A9EF91 /* SLSyncManager.m in Sources */,
 				65CFD92D190A30820034154A /* AppDelegate.m in Sources */,
 				65CFD971190BAAD20034154A /* SLDataStore.m in Sources */,
-				65CFD9931917A04C0034154A /* Image.m in Sources */,
 				65CFD9961917A04D0034154A /* Board.m in Sources */,
 				65CFD929190A30820034154A /* main.m in Sources */,
 				65CFD9901915047A0034154A /* SLItemCollectionViewCell.m in Sources */,
+				65094DDA192C921900193DA5 /* Image.m in Sources */,
 				65CFD959190BA5C10034154A /* SLData.xcdatamodeld in Sources */,
 				65CFD9991917A04D0034154A /* Currency.m in Sources */,
 			);
