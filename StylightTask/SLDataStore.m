@@ -52,11 +52,6 @@ static SLDataStore *_instance;
         });
         _managedObjectContext=[[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         _managedObjectContext.parentContext=_masterManagedObjectContext;
-//        [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:_managedObjectContext queue:nil usingBlock:^(NSNotification *note) {
-//                [_masterManagedObjectContext performBlock:^{
-//                    [_masterManagedObjectContext save:nil];
-//                }];
-//        }];
         
         NSFetchRequest *fetchRequest=[NSFetchRequest fetchRequestWithEntityName:@"Item"];
         fetchRequest.fetchBatchSize=20;
@@ -126,7 +121,6 @@ static SLDataStore *_instance;
 
 -(void)update
 {
-//    [NSFetchedResultsController deleteCacheWithName:@"Master"];
     NSError *error;
     [_resultsController performFetch:&error];
 }
@@ -135,15 +129,15 @@ static SLDataStore *_instance;
 
 -(void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {
-    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(didReceiveChangesAtIndexPath:)]) {
-        [self.delegate didReceiveChangesAtIndexPath:newIndexPath];
+    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(dataStoreDidReceiveChangesAtIndexPath:)]) {
+        [self.delegate dataStoreDidReceiveChangesAtIndexPath:newIndexPath];
     }
 }
 
 -(void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
-    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(didUpdateResults)]) {
-        [self.delegate didUpdateResults];
+    if(self.delegate&&[self.delegate conformsToProtocol:@protocol(SLDataStoreDelegate)]&&[self.delegate respondsToSelector:@selector(dataStoreDidUpdateResults)]) {
+        [self.delegate dataStoreDidUpdateResults];
     }
 }
 

@@ -130,6 +130,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		65094DDB192C9D0B00193DA5 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				65CFD934190A30820034154A /* SLItemCollectionViewController.h */,
+				65CFD935190A30820034154A /* SLItemCollectionViewController.m */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
+		65094DDC192C9D1200193DA5 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				65CFD954190A31500034154A /* SLDataGrabber.h */,
+				65CFD955190A31500034154A /* SLDataGrabber.m */,
+				65CFD987190E18040034154A /* SLDataGrabberDelegate.h */,
+				65CFD96F190BAAD20034154A /* SLDataStore.h */,
+				65CFD970190BAAD20034154A /* SLDataStore.m */,
+				65437CA9192366F5006E63DC /* SLDataStoreDelegate.h */,
+				65928E911926090E00A9EF91 /* SLSyncManager.h */,
+				65928E921926090E00A9EF91 /* SLSyncManager.m */,
+			);
+			name = Data;
+			sourceTree = "<group>";
+		};
 		65CFD910190A30820034154A = {
 			isa = PBXGroup;
 			children = (
@@ -209,16 +233,8 @@
 		65CFD988190E4D640034154A /* Controller */ = {
 			isa = PBXGroup;
 			children = (
-				65CFD934190A30820034154A /* SLItemCollectionViewController.h */,
-				65CFD935190A30820034154A /* SLItemCollectionViewController.m */,
-				65CFD954190A31500034154A /* SLDataGrabber.h */,
-				65CFD955190A31500034154A /* SLDataGrabber.m */,
-				65CFD987190E18040034154A /* SLDataGrabberDelegate.h */,
-				65CFD96F190BAAD20034154A /* SLDataStore.h */,
-				65CFD970190BAAD20034154A /* SLDataStore.m */,
-				65437CA9192366F5006E63DC /* SLDataStoreDelegate.h */,
-				65928E911926090E00A9EF91 /* SLSyncManager.h */,
-				65928E921926090E00A9EF91 /* SLSyncManager.m */,
+				65094DDC192C9D1200193DA5 /* Data */,
+				65094DDB192C9D0B00193DA5 /* View */,
 			);
 			name = Controller;
 			sourceTree = "<group>";

@@ -9,6 +9,12 @@
 #import <Foundation/Foundation.h>
 
 @protocol SLDataGrabberDelegate <NSObject>
-@optional -(void)didFinishGrabbingData;
-@optional -(void)didFailGrabbingData;
+/**
+ Gets called when the SLDataGrabber succesfully retrieved data
+*/
+@optional -(void)dataGrabberDidFinishGrabbingData;
+/**
+ Gets called when the SLDataGrabber failed to retrieve data
+*/
+@optional -(void)dataGrabberDidFailGrabbingData;
 @end

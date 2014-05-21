@@ -31,12 +31,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    //Configure shadow for top bar
     self.topBarView.layer.shadowColor=[UIColor blackColor].CGColor;
     self.topBarView.layer.shadowOffset=CGSizeMake(0.0f, 0.0f);
     self.topBarView.layer.shadowRadius=5.0f;
     self.topBarView.layer.shadowOpacity=0.3f;
+    
+    //Initialize NSCache for image caching
     _imageCache=[[NSCache alloc] init];
     _imageCache.countLimit=100;
+    
     [SLDataStore defaultStore].delegate=self;
     _page=0;
 }
@@ -67,8 +71,10 @@
     if(itemImage) {
         image=[_imageCache objectForKey:itemImage.url];
         if(!image) {
-            if(itemImage.image)
+            if(itemImage.image) {
                 image=[UIImage imageWithData:itemImage.image];
+                [_imageCache setObject:image forKey:itemImage.url];
+            }
             if(!image) {
                 image=[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:itemImage.url]]];
             }
@@ -151,6 +157,7 @@
             if(!image&&itemImage&&itemImage.image) {
                 //get image from Core Data if it wasn't cached
                 image=[UIImage imageWithData:itemImage.image];
+                [_imageCache setObject:image forKey:itemImage.url];
             }
             if(image) {
                 //display the image if there was any within cache or Core Data
@@ -182,12 +189,12 @@
 
 #pragma mark SLDataStoreDelegate
 
--(void)didUpdateResults
+-(void)dataStoreDidUpdateResults
 {
     [self.collectionView reloadData];
 }
 
--(void)didReceiveChangesAtIndexPath:(NSIndexPath *)indexPath
+-(void)dataStoreDidReceiveChangesAtIndexPath:(NSIndexPath *)indexPath
 {
 }
 

@@ -62,7 +62,6 @@ static NSUInteger const kTimeBetweenSyncs=15*60;
 {
     NSDate *lastSyncDate=[_syncDateDictionary objectForKey:[NSString stringWithFormat:@"%li",(long)page]];
     if(lastSyncDate&&[lastSyncDate timeIntervalSinceNow]+kTimeBetweenSyncs>0) {
-        NSLog(@"Last sync too recent");
         return;
     }else {
     
